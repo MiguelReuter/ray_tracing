@@ -66,59 +66,53 @@ int main()
 	int H = 1024;
 	std::vector<unsigned char> img(W*H * 3, 0);
 
-	// objects
-
-
-
-	//light
-	Vector light_pos = Vector(-10, 20, 40);
-	Light light = Light(light_pos, 1000000);
-
 	// camera
-	Vector camera_pos = Vector(.0f, .0f, 55.0f);
+	Vector camera_pos(.0f, .0f, 20.0f);
+	float tan_fov = tan(60 * M_PI / 360.0f); // 60 : in degrees
 
+	// scene
+	Scene scene;
+	// light
+	scene.addLight(Light(Vector(15, 70, -30), 1000000));
+	scene.addLight(Light(Vector(10, 20, 40), 1000000));
 
-	Scene scene = Scene();
-    scene.add_sphere(Sphere(Vector(5.0, 0.0, 0.0), 10.0f, Vector(0.0, 1.0, 1.0)));
-    scene.add_sphere(Sphere(Vector(-5.0, 0.0, 0.0), 10.0f, Vector(1.0, 0.0, 0.0)));
+	// objects
+	// mirror sphere
+    Sphere s_mirror = Sphere(Vector(-25.0, 0.0, -55.0), 10.0f, Vector(1.0, 0.0, 0.0), true);
+    scene.addSphere(s_mirror);
 
-	float fov = 60; // in degrees
+    // transparent sphere
+    Sphere s_transp = Sphere(Vector(25.0, 0.0, -55.0), 10.0f, Vector(1.0, 0.0, 0.0));
+    s_transp.setTransparent();
+    s_transp.coeff_n = 1.3;
+    scene.addSphere(s_transp);
+
+    // diffuse sphere
+    scene.addSphere(Sphere(Vector(0.0, 0.0, -55.0), 10.0f, Vector(1.0, 1.0, 1.0)));
+
+    // walls
+    scene.addSphere(Sphere(Vector(0.0, -2000.0-20, 0.0), 2000.0f, Vector(1.0, 1.0, 1.0))); // ground
+    scene.addSphere(Sphere(Vector(0.0, 2000.0+100, 0.0), 2000.0f, Vector(1.0, 1.0, 1.0))); //ceiling
+    scene.addSphere(Sphere(Vector(-2000.0-50, 0.0, 0.0), 2000.0f, Vector(0.0, 1.0, 0.0))); // left wall
+    scene.addSphere(Sphere(Vector(2000.0+50, 0.0, 0.0), 2000.0f, Vector(0.0, 0.0, 1.0))); // right wall
+    scene.addSphere(Sphere(Vector(0.0, 0.0, -2000.0-100), 2000.0f, Vector(0.0, 1.0, 1.0))); // back wall
+
 
 	for (int j=0; j<W; j++)
         for (int i=0; i<H; i++)
         {
-            Vector u = Vector(j - W/2.0f + 0.5,
-                              i - H/2.0f + 0.5,
-                              -W / (2 * tan(fov * M_PI / 360.0f)));
-            u.normalize();
+            // ray (from camera to each pixel in pixel grid)
+            Vector direction = Vector(j - W/2.0f + 0.5, i - H/2.0f + 0.5, -W / (2 * tan_fov)).normalizeConst();
+            Ray r(camera_pos, direction);
 
-            Ray r(camera_pos, u);
-            Vector P, N;
-            int sphere_ind;
+            Vector color = scene.getColor(r, 5);
 
-            if (scene.intersect(r, P, N, sphere_ind))
-            {
-                Sphere sphere = scene.spheres[sphere_ind];
-
-                Vector l = light.position - P;
-                l.normalize();
-                float inte = light.intensity * max(Vector::dot(N, l), .0f) / (light.position - P).length2() * 1/ M_PI;
-
-                img[((H-i-1)*W + j)*3] = min(255.f, inte * sphere.color.x * light.color.x / 255.f);
-                img[((H-i-1)*W + j)*3 + 1] = min(255.f, inte * sphere.color.y * light.color.y / 255.f);
-                img[((H-i-1)*W + j)*3 + 2] = min(255.f, inte * sphere.color.z * light.color.z / 255.f) ;
-            }
+            img[((H-i-1)*W + j)*3 + 0] = min(255., pow(color[0], 0.4545));
+            img[((H-i-1)*W + j)*3 + 1] = min(255., pow(color[1], 0.4545));
+            img[((H-i-1)*W + j)*3 + 2] = min(255., pow(color[2], 0.4545));
         }
 
-
-
-
-
-
-
-	//img[(10 * W + 50)*3] = 255;  // pixel at (x, y) = (50, 10) is red
-
-	save_image("test.bmp", &img[0], W, H);
+	save_image("seance_2_.bmp", &img[0], W, H);
 
     return 0;
 }

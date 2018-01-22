@@ -8,16 +8,17 @@ class Ray
 {
     public:
         Ray();
-        Ray(Vector O, Vector dir);
+        Ray(Vector origin, Vector direction);
         virtual ~Ray();
 
-        Vector origin;
-        Vector direction;
+        Vector getOrigin() const {return origin;};
+        Vector getDirection() const {return direction;};
 
     protected:
 
     private:
-
+        Vector origin;
+        Vector direction;
 };
 
 #endif // RAY_H

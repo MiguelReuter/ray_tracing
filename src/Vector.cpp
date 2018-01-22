@@ -1,5 +1,5 @@
 #include "Vector.h"
-#include "math.h"
+
 
 
 Vector::Vector()
@@ -32,12 +32,12 @@ void Vector::operator-=(const Vector v)
 */
 
 
-const float Vector::length2()
+float Vector::length2() const
 {
     return x * x + y * y + z * z;
 }
 
-const float Vector::length()
+float Vector::length() const
 {
     return sqrt(length2());
 }
@@ -51,10 +51,31 @@ void Vector::normalize()
     z /= n;
 }
 
+Vector Vector::normalizeConst() const
+{
+    Vector u = *this;
+    u.normalize();
+
+    return u;
+}
+
+
 ostream& operator<<(ostream& os, const Vector& v)
 {
-    os << '(' << v.x << ', ' << v.y << ', ' << v.z << ')';
+    os << "(" <<  to_string(v.x) << ", " << to_string(v.y) << ", " << to_string(v.z) << ")";
     return os;
+}
+
+float Vector::operator[](int i)
+{
+    if (i == 0)
+        return x;
+    else if (i == 1)
+        return y;
+    else if (i == 2)
+        return z;
+    else
+        throw std::out_of_range("");
 }
 
 Vector::~Vector()
