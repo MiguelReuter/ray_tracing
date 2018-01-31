@@ -4,6 +4,8 @@
 #include <vector>
 #include "Sphere.h"
 #include "Light.h"
+#include <math.h>
+#include "Vector.h"
 
 class Scene
 {
@@ -18,6 +20,7 @@ class Scene
 
         bool intersection(const Ray& r, Vector& P, Vector& N, int& sphere_ind, float& t);
         bool computeShadow(Vector intersect_pt, Vector light_pos);
+
 
         Vector getColor(const Ray& r, int rebound_nb);
 

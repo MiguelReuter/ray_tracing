@@ -1,4 +1,11 @@
 #include "Scene.h"
+#include <random>
+
+using namespace std;
+
+// random engine
+std::default_random_engine engine;
+std::uniform_real_distribution <double> u(0,1);
 
 Scene::Scene()
 {
@@ -125,7 +132,7 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
             }
             else
             {
-                // if intersect point not in shadow
+                // direct lighting
                 if (!computeShadow(P + N * 0.01, light.position))
                 {
                     Vector l = (light.position - P).normalizeConst();
@@ -136,6 +143,28 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                     color.y += intensity_value * sphere.color[1] * light.color[1];
                     color.z += intensity_value * sphere.color[2] * light.color[2];
                 }
+
+
+                // indirect lighting
+                double r1 = u(engine);
+                double r2 = u(engine);
+
+                // in local ref
+                Vector rand_ray_dir_local = Vector(cos(2*M_PI*r1)*sqrt(1-r2), sin(2*M_PI*r1)*sqrt(1-r2), sqrt(r2));
+                Vector rand_vect(u(engine) - 0.5, u(engine) - 0.5, u(engine) - 0.5);
+
+                Vector tang_1 = (Vector::crossProduct(N, rand_vect));
+                tang_1.normalize();
+                Vector tang_2 = Vector::crossProduct(tang_1, N);
+
+
+                // in global ref
+                Vector rand_ray_dir = N * rand_ray_dir_local.z + tang_1 * rand_ray_dir_local.x + tang_2 * rand_ray_dir_local.y;
+
+                //cout << rand_ray_dir << endl;
+
+                Ray rand_ray(P + N * 0.01, rand_ray_dir);
+                color += getColor(rand_ray, rebound_nb - 1) * sphere.color;
             }
         }
     }

@@ -1,6 +1,6 @@
 // Raytracer.cpp : Defines the entry point for the console application.
 #define _CRT_SECURE_NO_WARNINGS // for AVisual Studio 2017 (maybe 2015 as well)
-
+# define NUM_RAYS 100
 
 #include "Light.h"
 #include "Ray.h"
@@ -8,15 +8,15 @@
 #include "Sphere.h"
 #include "Vector.h"
 
-
 #include "math.h"
+#include "omp.h"
 #include <iostream>
+#include <random>
 #include <vector>
 
-#include <iostream>
-
-
 using namespace std;
+
+
 
 void save_image(const char* filename, const unsigned char* tableau, int w, int h) { // (0,0) is top-left corner
 
@@ -74,10 +74,11 @@ int main()
 	Scene scene;
 	// light
 	scene.addLight(Light(Vector(15, 70, -30), 1000000));
-	scene.addLight(Light(Vector(10, 20, 40), 1000000));
+	//scene.addLight(Light(Vector(10, 20, 40), 1000000));
 
 	// objects
 	// mirror sphere
+
     Sphere s_mirror = Sphere(Vector(-25.0, 0.0, -55.0), 10.0f, Vector(1.0, 0.0, 0.0), true);
     scene.addSphere(s_mirror);
 
@@ -97,20 +98,27 @@ int main()
     scene.addSphere(Sphere(Vector(2000.0+50, 0.0, 0.0), 2000.0f, Vector(0.0, 0.0, 1.0))); // right wall
     scene.addSphere(Sphere(Vector(0.0, 0.0, -2000.0-100), 2000.0f, Vector(0.0, 1.0, 1.0))); // back wall
 
-
+#pragma omp parallel for
 	for (int j=0; j<W; j++)
+	{
         for (int i=0; i<H; i++)
         {
             // ray (from camera to each pixel in pixel grid)
             Vector direction = Vector(j - W/2.0f + 0.5, i - H/2.0f + 0.5, -W / (2 * tan_fov)).normalizeConst();
             Ray r(camera_pos, direction);
 
-            Vector color = scene.getColor(r, 5);
+            Vector color(0.0, 0.0, 0.0);
+            for (int k = 0; k < NUM_RAYS; k++)
+                color += scene.getColor(r, 5);
+
+            color /= NUM_RAYS;
+
 
             img[((H-i-1)*W + j)*3 + 0] = min(255., pow(color[0], 0.4545));
             img[((H-i-1)*W + j)*3 + 1] = min(255., pow(color[1], 0.4545));
             img[((H-i-1)*W + j)*3 + 2] = min(255., pow(color[2], 0.4545));
         }
+    }
 
 	save_image("seance_2_.bmp", &img[0], W, H);
 

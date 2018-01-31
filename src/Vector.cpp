@@ -16,21 +16,6 @@ Vector::Vector(float _x, float _y, float _z)
     z = _z;
 }
 
-/*void Vector::operator+=(const Vector v)
-{
-    x += v.x;
-    y += v.y;
-    z += v.z;
-}
-
-void Vector::operator-=(const Vector v)
-{
-    x -= v.x;
-    y -= v.y;
-    z -= v.z;
-}
-*/
-
 
 float Vector::length2() const
 {
@@ -82,5 +67,6 @@ Vector::~Vector()
 {
     //dtor
 }
+
 
 
