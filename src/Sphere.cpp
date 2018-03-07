@@ -9,9 +9,16 @@ Sphere::Sphere()
     color = Vector(1.0, 1.0, 1.0);
 }
 
-Sphere::Sphere(Vector C, float r, Vector col, bool mirror, Vector spec_col, bool transparent, float n) : center(C), radius(r), color(col), is_mirror(mirror), specular_color(spec_col), is_transparent(transparent), coeff_n(n){};
+Sphere::Sphere(Vector C, float r, Vector col, bool mirror, Vector spec_col, bool transparent, float n) : center(C), radius(r)
+{
+    color = col;
+    is_mirror = mirror;
+    is_transparent = transparent;
+    specular_color = spec_col;
+    coeff_n = n;
+};
 
-bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t)
+bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t) const
 {
     float a = (r.getDirection()).length2();
     float b = 2 * Vector::dot(r.getDirection(), r.getOrigin() - center);
@@ -41,8 +48,6 @@ bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t)
         else
             return false;
     }
-
-
 return false;
 }
 

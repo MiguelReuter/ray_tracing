@@ -7,6 +7,7 @@ using namespace std;
 std::default_random_engine engine;
 std::uniform_real_distribution <double> u(0,1);
 
+
 Scene::Scene()
 {
     //ctor
@@ -14,18 +15,17 @@ Scene::Scene()
 
 
 
-bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& sphere_ind, float& t)
+bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& object_ind, float& t) const
 {
     float best_t = 1E9;
     int best_id = -1;
 
-    for (int i=0; i < spheres.size(); i++)
+    for (uint i=0; i < objects.size(); i++)
     {
-        Sphere sphere = spheres[i];
+        //const Object* object = objects[i];
         Vector P_i, N_i;
         float t_i;
-
-        if (sphere.intersection(r, P_i, N_i, t_i))
+        if (objects[i]->intersection(r, P_i, N_i, t_i))
         {
             if (t_i < best_t)
             {
@@ -37,8 +37,8 @@ bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& sphere_ind, fl
 
     if (best_id != -1)
     {
-        sphere_ind = best_id;
-        return spheres[best_id].intersection(r, P, N, t);
+        object_ind = best_id;
+        return objects[best_id]->intersection(r, P, N, t);
     }
 
     else
@@ -55,13 +55,13 @@ bool Scene::computeShadow(Vector intersect_point, Vector light_pos)
 
     float d_max = LP.length2();
 
-    for (int i = 0; i < spheres.size(); i++)
+    for (uint i = 0; i < objects.size(); i++)
     {
-        Sphere sphere = spheres[i];
+        const Object* object = objects[i];
         Vector P_i, N_i;
         float t_i;
 
-        if (sphere.intersection(r, P_i, N_i, t_i))
+        if (object->intersection(r, P_i, N_i, t_i))
         {
             if (t_i * t_i <= d_max)
                 return true;
@@ -79,22 +79,22 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
         return Vector(0.0, 0.0, 0.0);
 
 
-    for (int i = 0; i < lights.size(); i++)
+    for (uint i = 0; i < lights.size(); i++)
     {
         // light
         Light light = lights[i];
 
         Vector P, N;
         float t_light;
-        int sphere_id;
+        int object_id;
 
         // if ray hit an object
-        if (intersection(r, P, N, sphere_id, t_light))
+        if (intersection(r, P, N, object_id, t_light))
         {
-            Sphere sphere = spheres[sphere_id];
+            const Object* object = objects[object_id];
 
             // Specular
-            if (sphere.isMirror())
+            if (object->isMirror())
             {
                 Vector mirror_ray_dir = r.getDirection() - N * 2 * Vector::dot(N, r.getDirection());
                 Ray r_mirror(P + N * 0.01, mirror_ray_dir);
@@ -102,19 +102,19 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 color = getColor(r_mirror, rebound_nb - 1);
 
                 // spec color
-                color.x = sphere.specular_color[0] * color[0];
-                color.y = sphere.specular_color[1] * color[1];
-                color.z = sphere.specular_color[2] * color[2];
+                color.x = object->specular_color[0] * color[0];
+                color.y = object->specular_color[1] * color[1];
+                color.z = object->specular_color[2] * color[2];
             }
-            else if (sphere.isTransparent())
+            else if (object->isTransparent())
             {
                 float n1 = 1.0;
-                float n2 = sphere.coeff_n;
+                float n2 = object->coeff_n;
                 Vector normal_refraction = N;
 
                 if (Vector::dot(N, r.getDirection()) > 0) // ray comes from the sphere
                 {
-                    n1 = sphere.coeff_n;
+                    n1 = object->coeff_n;
                     n2 = 1.0;
                     normal_refraction = N * -1;
                 }
@@ -139,9 +139,9 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
 
                     float intensity_value = light.intensity * max(Vector::dot(N, l), .0f) / (light.position - P).length2() * 1/ M_PI;
 
-                    color.x += intensity_value * sphere.color[0] * light.color[0];
-                    color.y += intensity_value * sphere.color[1] * light.color[1];
-                    color.z += intensity_value * sphere.color[2] * light.color[2];
+                    color.x += intensity_value * object->color[0] * light.color[0];
+                    color.y += intensity_value * object->color[1] * light.color[1];
+                    color.z += intensity_value * object->color[2] * light.color[2];
                 }
 
 
@@ -164,7 +164,7 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 //cout << rand_ray_dir << endl;
 
                 Ray rand_ray(P + N * 0.01, rand_ray_dir);
-                color += getColor(rand_ray, rebound_nb - 1) * sphere.color;
+                color += getColor(rand_ray, rebound_nb - 1) * object->color;
             }
         }
     }

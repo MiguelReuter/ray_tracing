@@ -51,7 +51,7 @@ ostream& operator<<(ostream& os, const Vector& v)
     return os;
 }
 
-float Vector::operator[](int i)
+float Vector::operator[](int i) const
 {
     if (i == 0)
         return x;

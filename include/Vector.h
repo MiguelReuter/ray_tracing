@@ -28,18 +28,18 @@ class Vector
         friend ostream& operator<<(ostream& os, const Vector& v);
 
 // operators
-        Vector inline operator+(const Vector v){ return Vector(x + v.x, y + v.y, z + v.z);};
-        Vector inline operator-(const Vector v){ return Vector(x - v.x, y - v.y, z - v.z);};
-        Vector operator*(float a) {return Vector(a*x, a*y, a*z);};
-        Vector operator/(float a) {return Vector(x/a, y/a, z/a);};
-        Vector operator*(Vector b) {return Vector(x*b.x, y*b.y, z*b.z);};
+        Vector inline operator+(const Vector v) const { return Vector(x + v.x, y + v.y, z + v.z);};
+        Vector inline operator-(const Vector v) const { return Vector(x - v.x, y - v.y, z - v.z);};
+        Vector operator*(float a) const {return Vector(a*x, a*y, a*z);};
+        Vector operator/(float a) const {return Vector(x/a, y/a, z/a);};
+        Vector operator*(Vector b) const {return Vector(x*b.x, y*b.y, z*b.z);};
 
         Vector& operator+=(Vector b) {x += b.x; y += b.y; z += b.z; return *this;};
         Vector& operator-=(Vector b) {x -= b.x; y -= b.y; z -= b.z; return *this;};
         Vector& operator*=(Vector b) {x *= b.x; y *= b.y; z *= b.z; return *this;};
         Vector& operator/=(float b) {x /= b; y /= b; z /= b; return *this;};
 
-        float operator[](int i);
+        float operator[](int i) const;
 
     protected:
 
