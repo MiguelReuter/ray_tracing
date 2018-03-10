@@ -1,11 +1,12 @@
 // Raytracer.cpp : Defines the entry point for the console application.
 #define _CRT_SECURE_NO_WARNINGS // for AVisual Studio 2017 (maybe 2015 as well)
 
-#define NUM_RAYS 5
+#define NUM_RAYS 50
 #define NUM_BOUNDS 3
 
 
 #include "Light.h"
+#include "Mesh.h"
 #include "Ray.h"
 #include "Scene.h"
 #include "Sphere.h"
@@ -78,8 +79,9 @@ int main()
 	// camera
 	Vector camera_pos(.0f, .0f, 20.0f);
 	float tan_fov = tan(60 * M_PI / 360.0f); // 60 : in degrees
-	double shutter_size = 0.5;
-	double d_camera = 55;
+	//double shutter_size = 0.2;
+	double shutter_size = 1.0;
+	double focus_distance = 75;
 
 	// scene
 	Scene scene;
@@ -100,9 +102,9 @@ int main()
     scene.addSphere(s_transp);*/
 
     // diffuse sphere
-    Sphere sph_1(Vector(-15.0, 0.0, -55.0), 5.0f, Vector(1.0, 1.0, 1.0));
-    Sphere sph_2(Vector(15.0, 0.0, -55.0), 5.0f, Vector(.7, 1.0, 1.0));
-    Sphere sph_3(Vector(0.0, 20.0, -55.0), 5.0f, Vector(1.0, 1.0, .5));
+    Sphere sph_1(Vector(15.0, 0.0, -55.0), 5.0f, Vector(1.0, 1.0, 1.0));
+    Sphere sph_2(Vector(15.0, 0.0, -35.0), 5.0f, Vector(.7, 1.0, 1.0));
+    Sphere sph_3(Vector(15.0, 0.0, -20.0), 5.0f, Vector(1.0, 1.0, .5));
 
     scene.addSphere(sph_1);
     scene.addSphere(sph_2);
@@ -110,7 +112,12 @@ int main()
 
     Triangle tri_1(Vector{-15.0, 0.0, -55.0}, Vector{15.0, 0.0, -55.0}, Vector{0.0, 20.0, -55.0});
     tri_1.color = Vector{1.0, 1.0, 0.2};
-    scene.addTriangle(tri_1);
+    //scene.addTriangle(tri_1);
+
+    //Mesh mesh_1 = Mesh("models/LowPolyTree.obj", 40.0, Vector{0, -20.5, -55});
+    Mesh mesh_1 = Mesh("models/Rabbit/Rabbit.obj", 50.0, Vector{-15, -20.5, -55});
+    scene.addMesh(mesh_1);
+
     // walls
     Sphere wall_1(Vector(0.0, -2000.0-20, 0.0), 2000.0f, Vector(1.0, 1.0, 1.0));
     Sphere wall_2(Vector(0.0, 2000.0+100, 0.0), 2000.0f, Vector(1.0, 1.0, 1.0));
@@ -127,7 +134,7 @@ int main()
 
     #pragma omp parallel for
 	for (int j=0; j<W; j++)
-	{
+    {
         for (int i=0; i<H; i++)
         {
             Vector color(0.0, 0.0, 0.0);
@@ -142,21 +149,22 @@ int main()
                 double dx = _r * cos(2*M_PI*r2);
                 double dy = _r * sin(2*M_PI*r2);
 
-                // ray (from camera to each pixel in pixel grid)
                 Vector direction = Vector(j - W/2.0f + 0.5 + dx, i - H/2.0f + 0.5 + dy, -W / (2 * tan_fov)).normalizeConst();
+                // ray (from camera to each pixel in pixel grid)
 
-                // profondeur de champ
+                // ----------   DEPTH OF FIELD   --------- //
                 r1 = uniform_rand(engine_rand);
                 r2 = uniform_rand(engine_rand);
                 _r = sqrt(-2*log(r1));
                 dx = shutter_size * _r * cos(2*M_PI*r2);
                 dy = shutter_size * _r * sin(2*M_PI*r2);
 
-                direction = (camera_pos - Vector(dx, dy, 0) + direction * d_camera).normalizeConst();
-                Ray r(camera_pos + Vector(dx, dy, 0), direction);
+                Vector destination = camera_pos + focus_distance * direction;
+                Vector new_origin = camera_pos + Vector(dx, dy, 0);
+
+                Ray r(new_origin, (destination - new_origin).normalizeConst());
 
                 color += scene.getColor(r, NUM_BOUNDS);
-
             }
 
             color /= NUM_RAYS;
@@ -168,7 +176,7 @@ int main()
         }
     }
 
-	save_image("seance_5_.bmp", &img[0], W, H);
+	save_image("seance_6_.bmp", &img[0], W, H);
 
     return 0;
 }

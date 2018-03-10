@@ -15,7 +15,7 @@ Scene::Scene()
 
 
 
-bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& object_ind, float& t) const
+bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& object_ind, float& t, Vector& color) const
 {
     float best_t = 1E9;
     int best_id = -1;
@@ -25,7 +25,7 @@ bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& object_ind, fl
         //const Object* object = objects[i];
         Vector P_i, N_i;
         float t_i;
-        if (objects[i]->intersection(r, P_i, N_i, t_i))
+        if (objects[i]->intersection(r, P_i, N_i, t_i, color))
         {
             if (t_i < best_t)
             {
@@ -38,7 +38,7 @@ bool Scene::intersection(const Ray& r, Vector& P, Vector& N, int& object_ind, fl
     if (best_id != -1)
     {
         object_ind = best_id;
-        return objects[best_id]->intersection(r, P, N, t);
+        return objects[best_id]->intersection(r, P, N, t, color);
     }
 
     else
@@ -61,11 +61,10 @@ bool Scene::computeShadow(Vector intersect_point, Vector light_pos)
         Vector P_i, N_i;
         float t_i;
 
-        if (object->intersection(r, P_i, N_i, t_i))
-        {
+        Vector color;
+        if (object->intersection(r, P_i, N_i, t_i, color))
             if (t_i * t_i <= d_max)
                 return true;
-        }
     }
     return false;
 }
@@ -88,8 +87,10 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
         float t_light;
         int object_id;
 
+        Vector obj_color;
+
         // if ray hit an object
-        if (intersection(r, P, N, object_id, t_light))
+        if (intersection(r, P, N, object_id, t_light, obj_color))
         {
             const Object* object = objects[object_id];
 
@@ -102,9 +103,12 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 color = getColor(r_mirror, rebound_nb - 1);
 
                 // spec color
-                color.x = object->specular_color[0] * color[0];
-                color.y = object->specular_color[1] * color[1];
-                color.z = object->specular_color[2] * color[2];
+                color = object->specular_color * color;
+                /*
+                for (uint i = 0; i < 3; i++)
+                    color[i] = object->specular_color.getItem(i) * color[i];
+                    */
+
             }
             else if (object->isTransparent())
             {
@@ -137,11 +141,12 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 {
                     Vector l = (light.position - P).normalizeConst();
 
-                    float intensity_value = light.intensity * max(Vector::dot(N, l), .0f) / (light.position - P).length2() * 1/ M_PI;
+                    double intensity_value = light.intensity * max(Vector::dot(N, l), .0) / (light.position - P).length2() * 1/ M_PI;
 
-                    color.x += intensity_value * object->color[0] * light.color[0];
-                    color.y += intensity_value * object->color[1] * light.color[1];
-                    color.z += intensity_value * object->color[2] * light.color[2];
+
+                    //color += intensity_value * object->color * light.color;
+                    color += intensity_value * obj_color * light.color;
+
                 }
 
 
@@ -164,7 +169,7 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 //cout << rand_ray_dir << endl;
 
                 Ray rand_ray(P + N * 0.01, rand_ray_dir);
-                color += getColor(rand_ray, rebound_nb - 1) * object->color;
+                color += getColor(rand_ray, rebound_nb - 1) * obj_color;
             }
         }
     }

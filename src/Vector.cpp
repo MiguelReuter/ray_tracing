@@ -9,7 +9,7 @@ Vector::Vector()
     z = 0.0f;
 }
 
-Vector::Vector(float _x, float _y, float _z)
+Vector::Vector(double _x, double _y, double _z)
 {
     x = _x;
     y = _y;
@@ -17,19 +17,19 @@ Vector::Vector(float _x, float _y, float _z)
 }
 
 
-float Vector::length2() const
+double Vector::length2() const
 {
     return x * x + y * y + z * z;
 }
 
-float Vector::length() const
+double Vector::length() const
 {
     return sqrt(length2());
 }
 
 void Vector::normalize()
 {
-    float n = length();
+    double n = length();
 
     x /= n;
     y /= n;
@@ -51,7 +51,7 @@ ostream& operator<<(ostream& os, const Vector& v)
     return os;
 }
 
-float Vector::operator[](int i) const
+double Vector::getItem(int i) const
 {
     if (i == 0)
         return x;
@@ -62,6 +62,19 @@ float Vector::operator[](int i) const
     else
         throw std::out_of_range("");
 }
+
+double& Vector::operator[](const int i)
+{
+    if (i == 0)
+        return x;
+    else if (i == 1)
+        return y;
+    else if (i == 2)
+        return z;
+    else
+        throw std::out_of_range("");
+}
+
 
 Vector::~Vector()
 {

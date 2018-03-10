@@ -12,34 +12,36 @@ class Vector
 {
     public:
         Vector();
-        Vector(float x, float y, float z);
+        Vector(double x, double y, double z);
         virtual ~Vector();
 
-        float x, y, z;
+        double x, y, z;
+        double getItem(int i) const;
 
-        float length2() const;
-        float length() const;
+        double length2() const;
+        double length() const;
         void normalize();
         Vector normalizeConst() const;
 
-        static float dot(Vector u, Vector v){return u.x * v.x + u.y * v.y + u.z * v.z;};
+        static double dot(Vector u, Vector v){return u.x * v.x + u.y * v.y + u.z * v.z;};
         static Vector crossProduct(const Vector& u, const Vector& v){return Vector(u.y*v.z-u.z*v.y, u.z*v.x-u.x*v.z, u.x*v.y-u.y*v.x);};
 
         friend ostream& operator<<(ostream& os, const Vector& v);
+        friend Vector operator*(double a, const Vector& v) {return v * a;};
 
 // operators
         Vector inline operator+(const Vector v) const { return Vector(x + v.x, y + v.y, z + v.z);};
         Vector inline operator-(const Vector v) const { return Vector(x - v.x, y - v.y, z - v.z);};
-        Vector operator*(float a) const {return Vector(a*x, a*y, a*z);};
-        Vector operator/(float a) const {return Vector(x/a, y/a, z/a);};
+        Vector operator*(double a) const {return Vector(a*x, a*y, a*z);};
+        Vector operator/(double a) const {return Vector(x/a, y/a, z/a);};
         Vector operator*(Vector b) const {return Vector(x*b.x, y*b.y, z*b.z);};
 
         Vector& operator+=(Vector b) {x += b.x; y += b.y; z += b.z; return *this;};
         Vector& operator-=(Vector b) {x -= b.x; y -= b.y; z -= b.z; return *this;};
         Vector& operator*=(Vector b) {x *= b.x; y *= b.y; z *= b.z; return *this;};
-        Vector& operator/=(float b) {x /= b; y /= b; z /= b; return *this;};
+        Vector& operator/=(double b) {x /= b; y /= b; z /= b; return *this;};
 
-        float operator[](int i) const;
+        double& operator[](const int i);
 
     protected:
 

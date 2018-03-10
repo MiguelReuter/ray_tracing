@@ -18,8 +18,10 @@ Sphere::Sphere(Vector C, float r, Vector col, bool mirror, Vector spec_col, bool
     coeff_n = n;
 };
 
-bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t) const
+bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t, Vector& color) const
 {
+    color = this->color;
+
     float a = (r.getDirection()).length2();
     float b = 2 * Vector::dot(r.getDirection(), r.getOrigin() - center);
     float c = (center - r.getOrigin()).length2() - radius * radius;
