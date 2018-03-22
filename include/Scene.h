@@ -5,7 +5,6 @@
 #include "Mesh.h"
 #include "Object.h"
 #include "Sphere.h"
-#include "Triangle.h"
 #include "Light.h"
 #include <math.h>
 #include "Vector.h"
