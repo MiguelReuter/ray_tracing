@@ -1,12 +1,6 @@
 #include "Scene.h"
-#include <random>
 
 using namespace std;
-
-// random engine
-std::default_random_engine engine;
-std::uniform_real_distribution <double> u(0,1);
-
 
 Scene::Scene()
 {
@@ -75,13 +69,13 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
     Vector color(0.0, 0.0, 0.0);
 
     if (rebound_nb == 0)
-        return Vector(0.0, 0.0, 0.0);
+        return color;
 
 
     for (uint i = 0; i < lights.size(); i++)
     {
         // light
-        Light light = lights[i];
+        const Light* light = lights[i];
 
         Vector P, N;
         float t_light;
@@ -97,18 +91,13 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
             // Specular
             if (object->isMirror())
             {
-                Vector mirror_ray_dir = r.getDirection() - N * 2 * Vector::dot(N, r.getDirection());
+                Vector mirror_ray_dir = r.getDirection() - N * 2 * dot(N, r.getDirection());
                 Ray r_mirror(P + N * 0.01, mirror_ray_dir);
 
                 color = getColor(r_mirror, rebound_nb - 1);
 
                 // spec color
                 color = object->specular_color * color;
-                /*
-                for (uint i = 0; i < 3; i++)
-                    color[i] = object->specular_color.getItem(i) * color[i];
-                    */
-
             }
             else if (object->isTransparent())
             {
@@ -116,17 +105,17 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
                 float n2 = object->coeff_n;
                 Vector normal_refraction = N;
 
-                if (Vector::dot(N, r.getDirection()) > 0) // ray comes from the sphere
+                if (dot(N, r.getDirection()) > 0) // ray comes from the sphere
                 {
                     n1 = object->coeff_n;
                     n2 = 1.0;
                     normal_refraction = N * -1;
                 }
 
-                float radical = 1 - pow(n1 / n2, 2) * (1 - pow(Vector::dot(r.getDirection(), normal_refraction), 2));
+                float radical = 1 - pow(n1 / n2, 2) * (1 - pow(dot(r.getDirection(), normal_refraction), 2));
                 if (radical >= 0)
                 {
-                    Vector transmitted_ray_t = (r.getDirection() - (normal_refraction * Vector::dot(r.getDirection(), normal_refraction))) * (n1 / n2);
+                    Vector transmitted_ray_t = (r.getDirection() - (normal_refraction * dot(r.getDirection(), normal_refraction))) * (n1 / n2);
                     Vector transmitted_ray_n = normal_refraction * -sqrt(radical);
                     Ray r_transp(P - normal_refraction * 0.01, transmitted_ray_n + transmitted_ray_t);
 
@@ -137,36 +126,19 @@ Vector Scene::getColor(const Ray& r, int rebound_nb)
             else
             {
                 // direct lighting
-                if (!computeShadow(P + N * 0.01, light.position))
-                {
-                    Vector l = (light.position - P).normalizeConst();
+                Vector lum_P_axis = (P - light->position).normalizeConst();
+                Vector random_dir = random_cos(lum_P_axis);
+                Vector random_point = light->radius * random_dir + light->position;
+                Vector w_i = (random_point - P).normalizeConst();
+                Vector Np = random_dir;
 
-                    double intensity_value = light.intensity * max(Vector::dot(N, l), .0) / (light.position - P).length2() * 1/ M_PI;
+                double d_light_2 = (random_point - P).length2();
 
-
-                    //color += intensity_value * object->color * light.color;
-                    color += intensity_value * obj_color * light.color;
-
-                }
-
+                if (!computeShadow(P + N * 0.01, random_point))
+                    color = (light->intensity / (4 * M_PI * d_light_2) * max(0., dot(N, w_i) * dot(Np, -1*w_i) / dot(lum_P_axis, random_dir)) ) * obj_color * light->color;
 
                 // indirect lighting
-                double r1 = u(engine);
-                double r2 = u(engine);
-
-                // in local ref
-                Vector rand_ray_dir_local = Vector(cos(2*M_PI*r1)*sqrt(1-r2), sin(2*M_PI*r1)*sqrt(1-r2), sqrt(r2));
-                Vector rand_vect(u(engine) - 0.5, u(engine) - 0.5, u(engine) - 0.5);
-
-                Vector tang_1 = (Vector::crossProduct(N, rand_vect));
-                tang_1.normalize();
-                Vector tang_2 = Vector::crossProduct(tang_1, N);
-
-
-                // in global ref
-                Vector rand_ray_dir = N * rand_ray_dir_local.z + tang_1 * rand_ray_dir_local.x + tang_2 * rand_ray_dir_local.y;
-
-                //cout << rand_ray_dir << endl;
+                Vector rand_ray_dir = random_cos(N);
 
                 Ray rand_ray(P + N * 0.01, rand_ray_dir);
                 color += getColor(rand_ray, rebound_nb - 1) * obj_color;

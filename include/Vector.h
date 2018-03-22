@@ -23,7 +23,6 @@ class Vector
         void normalize();
         Vector normalizeConst() const;
 
-        static double dot(Vector u, Vector v){return u.x * v.x + u.y * v.y + u.z * v.z;};
         static Vector crossProduct(const Vector& u, const Vector& v){return Vector(u.y*v.z-u.z*v.y, u.z*v.x-u.x*v.z, u.x*v.y-u.y*v.x);};
 
         friend ostream& operator<<(ostream& os, const Vector& v);
@@ -47,5 +46,8 @@ class Vector
 
     private:
 };
+
+double dot(const Vector &u, const Vector &v);
+Vector random_cos(const Vector &N);
 
 #endif // VECTOR_H

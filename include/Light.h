@@ -7,10 +7,11 @@ class Light
 {
     public:
         Light();
-        Light(Vector pos, float intensity, Vector color=Vector(255.f, 255.f, 255.f));
+        Light(Vector pos, float intensity, Vector color=Vector(1.f, 1.f, 1.f), double radius=5);
         Vector position;
         Vector color;
         float intensity;
+        double radius;
         virtual ~Light();
 
     protected:

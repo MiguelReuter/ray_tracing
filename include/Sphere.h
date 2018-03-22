@@ -17,9 +17,6 @@ class Sphere : public Object
         virtual ~Sphere();
         virtual bool intersection(const Ray& r, Vector& P, Vector& N, float& t, Vector& color) const;
 
-    protected:
-
-    private:
         Vector center;
         float radius = 1.0;
 

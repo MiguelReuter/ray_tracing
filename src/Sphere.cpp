@@ -23,7 +23,7 @@ bool Sphere::intersection(const Ray& r, Vector& P, Vector& N, float& t, Vector& 
     color = this->color;
 
     float a = (r.getDirection()).length2();
-    float b = 2 * Vector::dot(r.getDirection(), r.getOrigin() - center);
+    float b = 2 * dot(r.getDirection(), r.getOrigin() - center);
     float c = (center - r.getOrigin()).length2() - radius * radius;
 
     float delta = b*b - 4 * a * c;
